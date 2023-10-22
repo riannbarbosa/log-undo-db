@@ -1,32 +1,28 @@
-import os
-from dotenv import load_dotenv, find_dotenv
+from decouple import config
 import psycopg2
 
-load_dotenv(find_dotenv())
-def connect():
-    conn = None
+def create_db_connection():
+          # Se conecta ao banco de dados padrão
+    db_configurations = {
+         "host": config('DB_HOST'),
+         "dbname": config('DB_NAME'),
+         "user": config('DB_USER'),
+        "password": config('DB_PASSWORD')
+    }
+    print(db_configurations)
+
     try:
-
-        # Se conecta ao banco de dados padrão
-        conn = psycopg2.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME"),
-        )
-        print(conn)
-        cursor = conn.cursor()  
-        cursor.execute('SELECT %s as connected;', ('Connection to postgres successful!',))    
-        record = cursor.fetchone()
-        print(record)
-        cursor.close()
-        return conn, cursor, record
-    except (Exception, psycopg2.DatabaseError) as error:
-        print("Error connecting to PostgreSQL", error)
-
-    finally:
-        if conn is not None:
-            conn.close()
-
+        connection = psycopg2.connect(**db_configurations)
+        return connection
 
     
+    except Exception as e:
+        print(f"Erro ao conectar ao banco de dados PostgreSQL: {e}")
+        return None
+
+if __name__ == "__main__":
+    db_connection = create_db_connection()
+    if db_connection:
+        print("Conectado ao banco de dados.")
+    else:
+        print("Falha ao conectar ao banco de dados.")
