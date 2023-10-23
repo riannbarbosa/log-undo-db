@@ -1,5 +1,6 @@
 from config.database_conn import create_db_connection
 from config.database_table import create, table_populate
+from config.log_undo import read_log
 import psycopg2
 
 def main():
@@ -12,6 +13,7 @@ def main():
             cursor = conn.cursor()
             create(cursor)
             table_populate(cursor)
+            read_log(cursor)
             cursor.close()
             conn.commit()
         else:

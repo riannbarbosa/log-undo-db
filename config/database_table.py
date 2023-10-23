@@ -17,9 +17,12 @@ def table_populate(cursor):
         try:
                 data = file.file_metadata()
                 for i in data:
-                        print(i)
-                        cursor.execute(f'''INSERT INTO data_log (A, B)
-                        VALUES ({i[0]}, {i[1]});''')
+                        if len(i) == 3:
+                                cursor.execute(f'''INSERT INTO data_log (id, A, B)
+                                VALUES ({i[0]}, {i[1]}, {i[2]});''')
+                        else:   
+                                cursor.execute(f'''INSERT INTO data_log (A, B)
+                                VALUES ({i[0]}, {i[1]});''')
         except:
                 print("Erro ao inserir dados na tabela")
                 exit(1)
