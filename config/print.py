@@ -4,31 +4,26 @@ def new_line():
 def print_update(transaction, old_value, log_values):
   row = log_values[0]
   column = log_values[1]
-  new_value = log_values[3]
+  new_value = log_values[2]
 
   print('TRANSAÇÃO '+ transaction +': No registro '+ row +', a coluna ' + column +' estava ' + str(old_value) + ' e no log atualizou para ' + new_value)
+
 
 def print_transactions(checkpoint_transactions, committed_transactions):
   
   new_line()
-  print(committed_transactions, checkpoint_transactions)
 
-  # Não tem transações commitadas
   if not committed_transactions:
     print('Não houve nenhuma alteração no banco')
     return
 
-  # Imprime transactions que foram commitadas
   if not checkpoint_transactions:
     for transaction in committed_transactions:
       print('Transação '+ transaction +': realizou UNDO')
 
-  # Imprime transações do checkpoint que realizaram ou não o Redo
   for transaction in checkpoint_transactions:
     if(transaction in committed_transactions):
       print('Transação '+ transaction +': realizou UNDO')
-    else:
-      print('Transação '+ transaction +': não realizou UNDO')
 
 
 def print_json(cursor):
@@ -54,3 +49,4 @@ def print_json(cursor):
       }
     }
   ''')
+  

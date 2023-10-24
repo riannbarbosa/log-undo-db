@@ -1,62 +1,92 @@
 import re
 from file_read_backwards import FileReadBackwards
 from config.print import print_transactions, print_json, print_update
-def find_by_last_checkpoint_find(file):
-  with FileReadBackwards(file, encoding='utf-8') as file:
-      for line in file:
-        matches = re.findall('<END CKPT>', line)
-        if(matches):
-           return matches[0].split(',')
-  return []
 
 
+uncommited_trans = []
+commited_trans = []
+# encontra end checkpoint de tras para frente
+#se tiver start checkpoint antes do end checkpoint, ele para
+def find_by_last_checkpoint_find(file_path):
+        with FileReadBackwards(file_path, encoding="utf-8") as file:
 
-def find_commited_trans(file, checkpoint_transactions):
-    commited_trans = []
-    print(checkpoint_transactions)
-    with FileReadBackwards(file, encoding='utf-8') as file:
-       for line in file:
-          if 'CKPT' in line:    
-             break
-          matches = re.search(r'<commit (.+?)>', line)
-          if(not matches):
-             matches_start = re.search(r'<start (.+?)>', line)
-             transaction = matches_start.group(1)
-             commited_trans.append(transaction)
-    return commited_trans          
-            
-def undo_changes(file_path, cursor, logged_transactions):
-     with FileReadBackwards(file_path, encoding='utf-8') as file:
-        for transaction in logged_transactions:
-            print(logged_transactions)
-            undoing = False
             for line in file:
-                if f'<start {transaction}>' in line:
-                    undoing = True
-                    continue
-                if undoing:
-                    matches = re.search(rf'<{transaction},(.+?)>', line)
+                line = re.sub('\n|\r', '', line).strip()
+                if "END CKPT" in line:
+                    break
+                    
+                matches = re.search(r'<start (.+?)>', line)
+                if matches:
+                   uncommited_trans.append(matches.group(1))
+            return uncommited_trans[::-1]
+
+# encontra transacoes comitadas antes do start ckpt 
+def find_commited_trans(file_path):
+    commited= False
+    file = open(file_path, 'r')
+    try:
+        for line in file:
+                if "END CKPT" in line:
+                    break
+                matches = re.search(r'<commit (.+?)>', line)
+                if matches:
+                    commited_trans.append(matches.group(1))
+                    commited = True
+                else:
+                    commited = False
+        file.close()
+        return commited
+    finally:
+         file.close()
+
+def find_if_not_committed(file_path):
+    file = open(file_path, 'r')
+    try:
+        for line in file:
+            if "START CKPT" in line:
+                    break
+            if(find_commited_trans(file_path) == False):
+                matches = re.search(r'<start (.+?)>', line)
+                if matches:
+                        uncommited_trans.append(matches.group(1))
+            
+            return uncommited_trans[::-1]
+    finally:
+         file.close()
+
+
+#logging undo functo
+def undo_changes(file_path, cursor):
+        file = open(file_path, 'r')
+        try:
+             
+            for transaction in commited_trans:
+                file.seek(0)
+                
+                content = file.read()
+                start_transaction = content.index('<start '+ transaction +'>')
+                file.seek(start_transaction)
+                for line in file:
+                    if ('<commit '+ transaction +'>' in line): break
+                    matches = re.search('<'+ transaction +',(.+?)>', line)
                     if matches:
                         values = matches.group(1).split(',')
-                        cursor.execute(f'SELECT {values[1]} FROM data WHERE id = {values[0]}')
-                        old_value = cursor.fetchone()[0]
-
-                        if int(values[3]) != old_value:
-                            cursor.execute(f'UPDATE data SET {values[1]} = {str(old_value)} WHERE id = {values[0]}')
-                            print_update(transaction, old_value, values)
-                    elif f'<commit {transaction}>' in line:
-                        break
-    
+                        cursor.execute('SELECT ' + values[1] + ' FROM data_log WHERE id = ' + values[0])
+                        tuple = cursor.fetchone()[0]
+                        if(int(values[2]) != tuple):
+                            cursor.execute(f'UPDATE data_log SET {values[1]} = {values[2]} WHERE id = {values[0]}')
+                            print_update(transaction, tuple, values)
+        finally:
+             file.close()
 
 def read_log(cursor):
-    file= 'files/input_log'
+    file = 'files/input_log'
     try:
         checkpoint_trans = find_by_last_checkpoint_find(file)
-        logged_transactions = find_commited_trans(file, checkpoint_trans)
-        undo_changes(file, cursor, logged_transactions)
-
-        print_transactions(checkpoint_trans, logged_transactions)
+        uncommitted_transactions = find_if_not_committed(file)
+        undo_changes(file, cursor)
+        print_transactions(checkpoint_trans,  uncommitted_transactions)
         print_json(cursor)
-    except:
-        print("Erro ao ler o arquivo input_log")
+    except Exception as e:
+        print(f"Error reading the input_log file: {str(e)}")
         exit(1)
