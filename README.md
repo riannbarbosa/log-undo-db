@@ -12,7 +12,7 @@ Acadêmico: **Rian Borges Barbosa**
 ---
 
 
-## 💾 **Implementando o Mecanismo de UNDO LOGGING com Checkpoint**
+### 💾 **Implementando o Mecanismo de UNDO LOGGING com Checkpoint**
 
 ### **Objetivo**
 Implementar o mecanismo de log Undo com checkpoint usando o SGBD 
