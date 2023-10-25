@@ -45,7 +45,7 @@ def find_if_not_committed(file_path):
         for line in file:
             if "START CKPT" in line:
                     break
-            if(find_commited_trans(file_path) == False):
+            if(find_commited_trans(file_path) == True):
                 matches = re.search(r'<start (.+?)>', line)
                 if matches:
                         uncommited_trans.append(matches.group(1))
@@ -55,18 +55,18 @@ def find_if_not_committed(file_path):
          file.close()
 
 
-#logging undo functo
 def undo_changes(file_path, cursor):
         file = open(file_path, 'r')
         try:
              
-            for transaction in commited_trans:
+            for transaction in uncommited_trans:
                 file.seek(0)
                 
                 content = file.read()
                 start_transaction = content.index('<start '+ transaction +'>')
                 file.seek(start_transaction)
                 for line in file:
+                    print(file)
                     if ('<commit '+ transaction +'>' in line): break
                     matches = re.search('<'+ transaction +',(.+?)>', line)
                     if matches:

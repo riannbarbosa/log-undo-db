@@ -26,13 +26,12 @@ O código receberá como entrada o arquivo de metadados (dados salvos) e os dado
 Funções a implementadas:
 1. Carregar o banco de dados com a tabela antes de executar o código do log (para zerar as configurações e dados parciais);
 2. Carregar o arquivo de log;
-3. Verifique quais transações devem realizar REDO. Imprimir o nome das transações que irão sofrer REDO.
+3. Verifique quais transações devem realizar UNDO. Imprimir o nome das transações que irão sofrer UNDO.
 4. Checar quais valores estão salvos nas tabelas e atualizar valores inconsistentes;
 5. Reportar quais dados foram atualizados;
-6. Seguir o fluxo de execução conforme o método de REDO.
+6. Seguir o fluxo de execução conforme o método de UNDO.
 
 
----
 
 
 ## 🚀 **Começando**
@@ -49,7 +48,7 @@ Feito a instalação das dependências do projeto, é necessário obter uma cóp
 Para isso, rode:
 
 ``` powershell
-git clone --recurse-submodules https://github.com/Dutraz/db-log-redo && cd db-log-redo
+git clone  https://github.com/riannbarbosa/log-undo-db && cd log-undo-db
 ```
 
 #### **2.1 Python**
@@ -64,21 +63,10 @@ pip install -r requirements.txt
 
 O projeto usa o banco de dados padrão do postgres, mas para usar o seu, apenas modifique o .env com a configuração do seu banco localizado na pasta do projeto. 
 
-``` SQL
-CREATE DATABASE logredo;
-```
-
----
-
 
 ## 📋 **Testando:**
 
-Entre na pasta src com o comando:
-``` powershell
-cd src
-```
-
-E então, execute o projeto com:
+Execute o projeto com:
 ``` powershell
 python main.py
 ```
@@ -112,30 +100,29 @@ Após isso, o programa deve ler o *arquivo de log* que segue o formato:
 
 ```html
 <start T1>
-<T1,1,A,20,500>
+<T1,1, A,15>
 <start T2>
 <commit T1>
-<CKPT (T2)>
-<T2,2,A,20,50>
+<START CKPT(T2)>
+<T2,2, B,50>	
+<commit T2>
+<END CKPT>
 <start T3>
 <start T4>
-<commit T2>
-<T4,1,B,20,100>
+<T4,1, B,55>
 ```
 
-E por fim identificar e realizar todos os REDO's necessários para que haja a integridade do banco de dados. Retornando a saída como:
+E por fim identificar e realizar todos os UNDO's necessários para que haja a integridade do banco de dados. Retornando a saída como:
 
->Transação T2 realizou REDO
+>Transação T3 não realizou UNDO
 
->Transação T3 não realizou REDO
-
->Transação T4 não realizou REDO
+>Transação T4 não realizou UNDO
  
 >```javascript
 >{  
 >    "INITIAL": {
->        "A": [500,20],
->        "B": [20,30]
+>        "A": [20,20],
+>        "B": [55,30]
 >    }
 >}
 >```
