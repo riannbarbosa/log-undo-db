@@ -26,7 +26,7 @@ def find_commited_trans(file_path):
     file = open(file_path, 'r')
     try:
         for line in file:
-                if "END CKPT" in line:
+                if "START CKPT" in line:
                     break
                 matches = re.search(r'<commit (.+?)>', line)
                 if matches:
@@ -34,22 +34,21 @@ def find_commited_trans(file_path):
                     commited = True
                 else:
                     commited = False
-        file.close()
         return commited
     finally:
          file.close()
 
 def find_if_not_committed(file_path):
     file = open(file_path, 'r')
+        
     try:
         for line in file:
-            if "START CKPT" in line:
+            if "END CKPT" in line:
                     break
             if(find_commited_trans(file_path) == False):
                 matches = re.search(r'<start (.+?)>', line)
                 if matches:
                         uncommited_trans.append(matches.group(1))
-            
             return uncommited_trans[::-1]
     finally:
          file.close()
@@ -68,7 +67,6 @@ def undo_changes(file_path, cursor):
                 for line in file:
                     if ('<commit '+ transaction +'>' in line): break
                     matches = re.search('<'+ transaction +',(.+?)>', line)
-                    print(line)
                     if matches:
                         values = matches.group(1).split(',')
                         cursor.execute('SELECT ' + values[1] + ' FROM data_log WHERE id = ' + values[0])
