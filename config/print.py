@@ -9,7 +9,7 @@ def print_update(transaction, old_value, log_values):
   print('TRANSAÇÃO '+ transaction +': No registro '+ row +', a coluna ' + column +' estava ' + str(old_value) + ' e no log atualizou para ' + new_value)
 
 
-def print_transactions(checkpoint_transactions, committed_transactions):
+def print_transactions(committed_transactions):
   
   new_line()
 
@@ -17,12 +17,7 @@ def print_transactions(checkpoint_transactions, committed_transactions):
     print('Não houve nenhuma alteração no banco')
     return
 
-  if not checkpoint_transactions:
-    for transaction in committed_transactions:
-      print('Transação '+ transaction +': realizou UNDO')
-
-  for transaction in checkpoint_transactions:
-    if(transaction in committed_transactions):
+  for transaction in committed_transactions:
       print('Transação '+ transaction +': realizou UNDO')
 
 

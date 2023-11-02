@@ -1,5 +1,5 @@
 <start T1>
-<T1,1, A,10>
+<T1,1, A,130>
 <start T2>
 <commit T1>
 <START CKPT(T2)>
@@ -9,4 +9,5 @@
 <start T4>
 <start T5>
 <T4,1, B,45>
-<T5,2, A, 60>
+<commit T4>
+<T5,2, A, 61>
